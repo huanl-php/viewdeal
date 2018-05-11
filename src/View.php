@@ -43,17 +43,8 @@ class View {
      * @param string $parameter
      * @param mixed $value
      */
-    public function bindValue(string $parameter, mixed $value) {
+    public function bindValue(string $parameter, $value) {
         $this->bind[$parameter] = $value;
-    }
-
-    /**
-     * 绑定变量值
-     * @param string $parameter
-     * @param mixed $variable
-     */
-    public function bindParam(string $parameter, mixed &$variable) {
-        $this->bind[$parameter] = $variable;
     }
 
     /**
@@ -70,30 +61,31 @@ class View {
                 '/{elif(.*?)}/',
                 '/{else}/',
                 '/{\/if}/',
-                '/{\$(.*?)}/',//变量操作
-                '/{:(.*?)}/',//输出操作
                 '/{foreach (.*?)}/',
                 '/{\/foreach}/',
                 '/{break}/',
                 '/{continue}/',
                 '/{for(.*?)}/',
                 '/{\/for}/',
+                '/{\$(.*?)}/',//变量定义
+                '/{:\$(.*?)}/',//变量输出
+                '/{:(.*?)}/',//函数执行/变量操作输出
                 '/{*(.*?)*}/'//注释
-            ],
-            [
+            ], [
                 '<?php $1;?>',
                 '<?php if($1):?>',
                 '<?php elseif($1):?>',
                 '<?php else:?>',
                 '<?php endif;?>',
-                '<?php \$$1;?>',
-                '<?php echo $1;?>',
                 '<?php foreach($1):?>',
                 '<?php endforeach;?>',
                 '<?php break;?>',
                 '<?php continue;?>',
                 '<?php for($1):?>',
                 '<?php endfor;?>',
+                '<?php \$$1;?>',//变量定义
+                '<?php echo ((($v=call_user_func([\$this,\'variable\'],\'$1\'))!==false)?\$v:\$$1);?>',//输出变量
+                '<?php echo $1;?>',//输出函数/操作变量
                 ''
             ]
         ];
@@ -102,6 +94,32 @@ class View {
         }, $template);
         $this->template = $template;
         return $template;
+    }
+
+    /**
+     * 获取变量
+     * @param string $variable
+     * @return  mixed
+     */
+    protected function variable(string $variable) {
+        //获取变量,先对变量进行处理,获取是否为数组的变量
+        preg_match_all('/\[(.*?)\]/', $variable, $matches);
+        if (sizeof($matches[0]) > 0) {
+            $variable = substr($variable, 0, strpos($variable, '['));
+        }
+        $ret = false;
+        if (isset($this->controller->$variable)) {
+            $ret = $this->controller->$variable;
+        }
+        //进入数组循环,判断数组是否存在,存在继续循环,否则返回false
+        foreach ($matches[1] as $value) {
+            if (isset($ret[$value])) {
+                $ret = $ret[$value];
+            } else {
+                return false;
+            }
+        }
+        return $ret;
     }
 
     /**
