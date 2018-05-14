@@ -39,7 +39,7 @@ class View {
      * View constructor.
      * @param $template
      */
-    public function __construct($template, $controller = null) {
+    public function __construct($template = '', $controller = null) {
         $this->template_file = $template;
         $this->controller = $controller;
     }
@@ -66,7 +66,7 @@ class View {
      * 编译模板,转为php语法
      * @return string
      */
-    public function compiled() {
+    public function compiled(): string {
         //首先读入模板,然后处理模板语法
         $template = file_get_contents($this->template_file);
         //模板语法替换成为php的语法,然后使用eval执行
@@ -169,8 +169,9 @@ class View {
 
     /**
      * 执行编译后的模板,返回html/文本代码
+     * @return string
      */
-    public function execute() {
+    public function execute(): string {
         if (empty($this->template)) {
             $this->compiled();
         }
@@ -179,4 +180,19 @@ class View {
         return ob_get_clean();
     }
 
+    /**
+     * 设置模板代码
+     * @param string $template
+     */
+    public function setTemplate(string $template): void {
+        $this->template = $template;
+    }
+
+    /**
+     * 设置模板文件
+     * @param string $template_file
+     */
+    public function setTemplateFile(string $template_file): void {
+        $this->template_file = $template_file;
+    }
 }
