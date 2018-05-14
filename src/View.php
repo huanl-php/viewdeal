@@ -195,4 +195,9 @@ class View {
     public function setTemplateFile(string $template_file): void {
         $this->template_file = $template_file;
     }
+
+    public function __toString() {
+        // TODO: Implement __toString() method.
+        return $this->compiled();
+    }
 }
