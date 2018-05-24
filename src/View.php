@@ -198,6 +198,7 @@ class View {
 
     public function __toString() {
         // TODO: Implement __toString() method.
+        $ret = '';
         try {
             $ret = $this->execute();
         } catch (\Throwable $exception) {
