@@ -198,6 +198,11 @@ class View {
 
     public function __toString() {
         // TODO: Implement __toString() method.
-        return $this->compiled();
+        try {
+            $ret = $this->execute();
+        } catch (\Throwable $exception) {
+            //toString 不能抛出异常...自己消化掉
+        }
+        return $ret;
     }
 }
