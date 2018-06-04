@@ -40,7 +40,7 @@ class View {
      * @param $template
      */
     public function __construct($template = '', $controller = null) {
-        $this->template_file = $template;
+        $this->template_file = realpath($template);
         $this->controller = $controller;
     }
 
