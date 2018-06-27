@@ -36,11 +36,17 @@ class View {
     private $variable = [];
 
     /**
+     * 缓存目录
+     * @var string
+     */
+    private $cacheDir = '';
+
+    /**
      * View constructor.
      * @param $template
      */
     public function __construct($template = '', $controller = null) {
-        $this->template_file = realpath($template);
+        $this->template_file = str_replace('\\', '/', realpath($template));
         $this->controller = $controller;
     }
 
@@ -63,16 +69,45 @@ class View {
     }
 
     /**
+     * 设置缓存目录
+     * @param $dir
+     * @return $this
+     */
+    public function setCacheDir($dir) {
+        $this->cacheDir = $dir;
+        return $this;
+    }
+
+    /**
+     * 获取缓存文件
+     * @return string
+     */
+    public function getCacheFilePath() {
+        return $this->cacheDir . '/' . md5($this->template_file) . '.php';
+    }
+
+    /**
      * 编译模板,转为php语法
      * @return string
      */
     public function compiled(): string {
+        $cacheFile = $this->getCacheFilePath();
+        //读取缓存
+        if ($this->cacheDir &&
+            file_exists($cacheFile)
+            && filemtime($this->template_file) < filemtime($cacheFile)) {
+            return $this->template = file_get_contents($cacheFile);
+        }
         //首先读入模板,然后处理模板语法
         $template = file_get_contents($this->template_file);
+        //处理得到模板目录路径
+        $segPos = 0;
+        $segPos = strrpos($this->template_file, '/');
+        $templateDir = substr($this->template_file, '0', $segPos);
         //模板语法替换成为php的语法,然后使用eval执行
         $grammar = [
             [
-                '/{include(.*?)}/',
+                '/{include \'(.*?)\'}/',
                 '/{if(.*?)}/',
                 '/{elif(.*?)}/',
                 '/{else}/',
@@ -88,7 +123,8 @@ class View {
                 '/{:(.*?)}/',//函数操作
                 '/{*(.*?)*}/'//注释
             ], [
-                '<?php $1;?>',
+                '<?php echo (new self(\'' . $templateDir . '$1.html\',$this))->setCacheDir("' . $this->cacheDir . '")
+                ->execute();?>',
                 '<?php if($1):?>',
                 '<?php elseif($1):?>',
                 '<?php else:?>',
@@ -105,7 +141,6 @@ class View {
                 ''
             ]
         ];
-
         $template = preg_replace_callback('/{([^{}]|(?R))*}/is', function ($matches) use ($grammar) {
             //对$符号和函数进行处理,替换成$this
             $matches[0] = str_replace('$', '$this->', $matches[0]);
@@ -113,6 +148,7 @@ class View {
             return $ret;
         }, $template);
         $this->template = $template;
+        file_put_contents($this->getCacheFilePath(), $template);
         return $template;
     }
 
@@ -123,13 +159,11 @@ class View {
      */
     public function __call($name, $arguments) {
         // TODO: Implement __call() method.
-        //调用方法顺序,控制器>全局
-        if (method_exists($this->controller, $name)) {
-            return call_user_func_array([$this->controller, $name], $arguments);
-        } else if (function_exists($name)) {
+        //调用方法顺序:全局>控制器
+        if (function_exists($name)) {
             return call_user_func_array($name, $arguments);
         }
-        throw new MethodExistsException('Method does not exist');
+        return call_user_func_array([$this->controller, $name], $arguments);
     }
 
     /**
