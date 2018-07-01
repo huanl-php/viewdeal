@@ -123,7 +123,7 @@ class View {
                 '/{:(.*?)}/',//函数操作
                 '/{*(.*?)*}/'//注释
             ], [
-                '<?php echo (new self(\'' . $templateDir . '$1.html\',$this))->setCacheDir("' . $this->cacheDir . '")
+                '<?php echo (new self(\'' . $templateDir . '$1.html\',$this->controller))->setCacheDir("' . $this->cacheDir . '")
                 ->execute();?>',
                 '<?php if($1):?>',
                 '<?php elseif($1):?>',
