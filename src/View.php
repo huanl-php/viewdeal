@@ -121,7 +121,7 @@ class View {
                 '/{\$(.*?)}/',//变量操作
                 '/{:\$(.*?)}/',//变量操作
                 '/{:(.*?)}/',//函数操作
-                '/{*(.*?)*}/'//注释
+                '/{\*(.*?)\*}/'//注释
             ], [
                 '<?php echo (new self(\'' . $templateDir . '$1.html\',$this->controller))->setCacheDir("' . $this->cacheDir . '")
                 ->execute();?>',
