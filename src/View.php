@@ -137,15 +137,15 @@ class View {
                 '<?php endfor;?>',
                 '<?php \$$1;?>',//变量定义
                 '<?php echo \$$1;?>',
-                '<?php echo $this->$1;?>',//输出函数/操作变量
+                '<?php echo $$1;?>',//输出函数/操作变量
                 ''
             ]
         ];
-        $template = preg_replace_callback('/{([^{}]|(?R))*}/is', function ($matches) use ($grammar) {
+        $template = preg_replace($grammar[0], $grammar[1], $template);
+        $template = preg_replace_callback('#<\?php (.*?)\?>#', function ($matches) use ($grammar) {
             //对$符号和函数进行处理,替换成$this
             $matches[0] = str_replace('$', '$this->', $matches[0]);
-            $ret = preg_replace($grammar[0], $grammar[1], $matches[0]);
-            return $ret;
+            return $matches[0];
         }, $template);
         $this->template = $template;
         file_put_contents($this->getCacheFilePath(), $template);
