@@ -148,7 +148,7 @@ class View {
             return $matches[0];
         }, $template);
         $this->template = $template;
-        file_put_contents($this->getCacheFilePath(), $template);
+        @file_put_contents($this->getCacheFilePath(), $template);
         return $template;
     }
 
