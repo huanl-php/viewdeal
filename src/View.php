@@ -148,7 +148,14 @@ class View {
             return $matches[0];
         }, $template);
         $this->template = $template;
-        @file_put_contents($this->getCacheFilePath(), $template);
+        if ($this->cacheDir) {
+            //如果不能写出缓存,禁止报错
+            try {
+                @file_put_contents($this->getCacheFilePath(), $template);
+            } catch (\Throwable $throwable) {
+
+            }
+        }
         return $template;
     }
 
