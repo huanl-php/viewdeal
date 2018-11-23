@@ -103,7 +103,7 @@ class View {
         //处理得到模板目录路径
         $segPos = 0;
         $segPos = strrpos($this->template_file, '/');
-        $templateDir = substr($this->template_file, '0', $segPos);
+        $templateDir = substr($this->template_file, 0, $segPos + 1);
         //模板语法替换成为php的语法,然后使用eval执行
         $grammar = [
             [
