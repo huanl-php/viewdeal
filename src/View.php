@@ -42,12 +42,26 @@ class View {
     private $cacheDir = '';
 
     /**
+     * layout文件路径
+     * @var string
+     */
+    private static $layoutPath = null;
+
+    /**
      * View constructor.
      * @param $template
      */
     public function __construct($template = '', $controller = null) {
-        $this->template_file = str_replace('\\', '/', realpath($template));
+        $this->setTemplateFile($template);
         $this->controller = $controller;
+    }
+
+    /**
+     * 设置布局layout
+     * @param null $path
+     */
+    public static function setLayout($path = null) {
+        self::$layoutPath = $path;
     }
 
     /**
@@ -218,7 +232,17 @@ class View {
         }
         ob_start();
         eval('?>' . $this->template);
-        return ob_get_clean();
+        $content = ob_get_clean();
+        if (self::$layoutPath === null) {
+            return $content;
+        }
+        $this->setTemplateFile(self::$layoutPath);
+        $this->bindValue('page_content', $content);
+        $compile = $this->compiled();
+        ob_start();
+        eval('?>' . $compile);
+        $content = ob_get_clean();
+        return $content;
     }
 
     /**
@@ -232,9 +256,11 @@ class View {
     /**
      * 设置模板文件
      * @param string $template_file
+     * @return View
      */
-    public function setTemplateFile(string $template_file): void {
-        $this->template_file = $template_file;
+    public function setTemplateFile(string $template_file): self {
+        $this->template_file = realpath(str_replace('\\', '/', $template_file));
+        return $this;
     }
 
     public function __toString() {
